@@ -2,7 +2,6 @@
 cd /home/navenave/TrabalhoSO
 gcc -o client ClienteTCP.c
 ./client
-
 */
 #ifndef unix
 #define WIN32
@@ -101,7 +100,7 @@ char    *argv[];
 
         /* Map TCP transport protocol name to protocol number. */
 
-        if ( ((int)(ptrp = getprotobyname("tcp"))) == 0) {
+        if ( ((int*)(ptrp = getprotobyname("tcp"))) == 0) {
                 fprintf(stderr, "cannot map \"tcp\" to protocol number");
                 exit(1);
         }
@@ -124,10 +123,11 @@ char    *argv[];
 
         gettimeofday(&start, NULL);
         fd_set reading;
+        int retval;
         FD_ZERO(&reading);
         FD_SET(sd, &reading);
 
-        tv.tv_sec = 10;
+        tv.tv_sec = 5;
         tv.tv_usec = 0;
 
         /* Repeatedly read data from socket and write to user's screen. */
@@ -145,8 +145,8 @@ char    *argv[];
 
         /* Laço for() feito para enviar múltiplas requisições. max_i = 1500 pois não tem garantia que todos os recv serão enviados*/
 
-       for(i=0;i<50;i++){
-
+       for(i=0;i<20;i++){  
+	
             send(sd, "GETR\n",10, 0);
 
 
@@ -157,16 +157,16 @@ char    *argv[];
 
             send(sd, "REPL\n",10, 0);
 
-            send(sd, "17",2, 0);
+            send(sd, "17\n",4, 0);
 
-            send(sd, "SUBSTITUIDO",11, 0);
+            send(sd, "SUBSTITUIDO\n",15, 0);
 
 
             send(sd, "PALT\n",10, 0);
 
             send(sd, "DELE\n",6, 0);
 
-                send(sd, "15",2, 0);
+                send(sd, "15\n",4, 0);
 
             send(sd, "ADDF\n",6, 0);
 
@@ -185,13 +185,12 @@ char    *argv[];
             send(sd, "GRAV\n",10, 0);
 
 
-            send(sd, "CARR\n",10, 0);
-
-
+            send(sd, "CARR\n",6, 0);
             memset(buf,0,1024);
             b=recv(sd, buf, 1024, 0);
             buf[b]=0;
             printf("%s",buf);
+        
         }
         /*Comando select() utilizado para estabelecer um timeout e garantir que o cliente não vai ficara parado aguardando todos os dados dos recv quando não forem enviados */
 
@@ -205,7 +204,7 @@ char    *argv[];
 
         /* Close the socket. */
 
-        closesocket(sd);
+        close(sd);
 
         /* Terminate the client program gracefully. */
 
