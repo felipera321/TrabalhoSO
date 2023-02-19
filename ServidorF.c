@@ -17,6 +17,9 @@ telnet 192.168.1.21 9551
 #include <unistd.h>
 #include <pthread.h>
 #include <time.h>
+#include <sys/select.h>
+#include <sys/time.h>
+
 
 #define PROTOPORT       5193            /* default protocol port number */
 #define QLEN            10               /* size of request queue        */
@@ -298,7 +301,7 @@ int main(int argc, char *argv[])
 
 	/* Main server loop - accept and handle requests */
 
-	while (1) {
+	/*while (1) {
 		alen = sizeof(cad);
 		if ( (sd2=accept(sd, (struct sockaddr *)&cad, &alen)) < 0) {
 			fprintf(stderr, "accept failed\n");
@@ -307,5 +310,38 @@ int main(int argc, char *argv[])
 		printf ("\nServidor atendendo conexÃ£o %d", visits);
                 pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
 
+	}*/
+	gettimeofday(&start, NULL);
+        fd_set current_sockets, ready_sockets;
+        int retval;
+        FD_ZERO(&current_sockets);
+        FD_SET(sd, &current_sockets);
+
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+	
+	while (1) {
+	ready_sockets = current_sockets;
+	if(select(FD_SETSIZE, &ready_sockets, NULL, NULL, NULL) <0){
+	perror("select error");
+	exit(EXIT_FAILURE);
 	}
+	for (int j=0; j< FD_SETSIZE; i++) {
+		if (FD_ISSET(i, &ready_sockets)){
+			if(j==sd){
+			alen = sizeof(cad);
+		if ( (sd2=accept(sd, (struct sockaddr *)&cad, &alen)) < 0) {
+			fprintf(stderr, "accept failed\n");
+			exit(1);
+		}
+		FD_SET(client_socket, &current_sockets);
+		printf ("\nServidor atendendo conexÃ£o %d", visits);
+                pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
+                FD_CLR(i, &current_sockets);
+                
+	}		
+	}
+	}
+	}
+	
 }
