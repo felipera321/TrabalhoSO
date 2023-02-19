@@ -3,7 +3,6 @@
 cd /mnt/c/Users/NAVE/OneDrive/Desktop/TrabalhoSO
 gcc -o servidorF servidorF.c -lpthread
 ./servidorF
-
 telnet 192.168.1.21 9551
 */
 
@@ -20,12 +19,12 @@ telnet 192.168.1.21 9551
 #include <time.h>
 
 #define PROTOPORT       5193            /* default protocol port number */
-#define QLEN            6               /* size of request queue        */
+#define QLEN            10               /* size of request queue        */
 
 int     visits      =   0;              /* counts client connections    */
 char    msg [1000][1000];
 int     ditados=0;
-
+int     NumPalavras=0;
 
 void LeDitado()
 {
@@ -52,21 +51,30 @@ char uppercase(char *input) {
 void *atendeConexao( int *sd2 )
 {
 	int sd=*sd2;
-	char str[1024], aux[1024], *endptr;
+	int sig=0;
+	char str[2000], aux[2000], *endptr;
 
-	int i=0, b, val;
+	int i=0, b, val, n;
 
         while (1) {
 		visits++;
-		sprintf(str,"\nRequisicao %d \n", visits);
-		send(sd,str,strlen(str),0);
-		b=recv(sd,str,999,0);
-                str[b]=0;
-                printf("\nComando recebido:%s",str);
-
+		sprintf(str,"\nRequisicao %d ", visits);
+		sig=send(sd,str,strlen(str),MSG_NOSIGNAL);
+		if (sig==-1){
+		break;
+		}
+                
+		memset(str,0,999);
+                b=recv(sd,str,10,0);
+                for(n=0;n<b;n++){
+                if((str[b-n] == '\n') || (str[b-n] == '\r')){
+                str[b-n] = 0;
+                }
+                }
+		printf("\nComando recebido:%s",str);
+		
 		uppercase(str);
 
-                if ((str[0]=='\r')||(str[0]=='\n')) continue;
 
 		if (!strncmp(str,"GETR",4)) {
 		     sprintf(str,"\nFrase: %s ", msg[random()%ditados]);
@@ -74,21 +82,24 @@ void *atendeConexao( int *sd2 )
 		}
                 else
                 if (!strncmp(str,"GETN",4)) {
-                     b=recv(sd,str,999,0);
+                     b=recv(sd,str,1,0);
                      str[b]=0;
                      val = strtol(str, &endptr, 10);
-                     if (endptr==str)  {sprintf(str,"\nFALHA");continue;}
-                     else  send(sd,msg[val],strlen(msg[val]),0);
+                     //if (endptr==str)  {sprintf(str,"\nFALHA");continue;}
+                     //else{
+                     sprintf(str,"\nGETN %d: %s",val, msg[val]);
+                     send(sd,str,strlen(str),0);
+                     //}
 		}
                 else
 		if (!strncmp(str,"REPL",4)) {
-		     b=recv(sd,str,999,0);
+		     b=recv(sd,str,2,0);
                      str[b]=0;
                      val = strtol(str, &endptr, 10);
-                     if (endptr==str)  {sprintf(str,"\nFALHA");continue;}
-                     else sprintf(str,"\nOK");
+                     //if (endptr==str)  {sprintf(str,"\nFALHA");continue;}
+                     //else sprintf(str,"\nOK");
 		     send(sd,str,strlen(str),0);
-		     b=recv(sd,str,999,0);
+		     b=recv(sd,str,13,0);
                      str[b]=0;
                      strcpy(msg[val],str);
                      sprintf(str,"\nOK");
@@ -109,7 +120,7 @@ void *atendeConexao( int *sd2 )
 	      else
             if (!strncmp(str,"ADDF",4)) {
             // Add a new phrase
-            int b = recv(sd, str, 999, 0);
+            b = recv(sd, str, 20, 0);
             str[b] = 0;
             strcpy(msg[ditados-1],str);
             char autor[]=". (Autor Desconhecido)";
@@ -124,77 +135,80 @@ void *atendeConexao( int *sd2 )
 }
             else
             if (!strncmp(str,"DELE",4)) {
-            b = recv(sd, str, 999, 0);
+            b = recv(sd, str, 2, 0);
             str[b] = 0;
             val = strtol(str, &endptr, 10);
-            if (endptr == str) {
-            sprintf(str, "\nFALHA");
-            continue;
-            }
-            else {
-            strcpy(msg[val], "");
+            //if (endptr == str) {
+            //sprintf(str, "\nFALHA");
+            //continue;
+            //}
+            //else {
+            strcpy(msg[val], "\0");
             sprintf(str, "\nOK\nFrase %d deletada\n",val);
             send(sd, str, strlen(str), 0);
-            }
+            //}
 }
            else
            if(!strncmp(str,"SEAR",4)){
             memset(str,0,1024);
-            b=recv(sd,str,999,0);
+            b=recv(sd,str,4,0);
             for(int n=0;n<b;n++){
-            if((str[b-n]=='\n')||(str[b-n]=='\r'))
+            if((str[b-n]=='\n')||(str[b-n]=='\r')){
                 str[b-n]=0;
             }
+            }
             for(i=0;i<ditados;i++){
-            if(strstr(msg[i],str)!=NULL)  //strstr compara se a palavra bate com a da frase
+            if(strstr(msg[i],str)!=NULL){  //strstr compara se a palavra bate com a da frase
                 send(sd,msg[i],strlen(msg[i]),0);
+             }
             }
            }
            else
            if(!strncmp(str,"PALD",4)){
             memset(str,0,1024);
-            b=recv(sd,str,999,0); //str -> teclado
+            b=recv(sd,str,1,0); //str -> teclado
+            str[b]=0;
             val = strtol(str, &endptr, 10); //coleta o # da frase
-            int P=0;
-            sprintf(str,"Ditado ecolhido %d: %s\n",val,msg[val]);
+            sprintf(str,"Ditado ecolhido %d: %s",val,msg[val]);
             send(sd,str,strlen(str),0);
             strcpy(aux,msg[val]);
+            NumPalavras=0;
             for(i=0;aux[i]!='(';i++){
             if(aux[i] ==' ')
-                P++;
+                NumPalavras++;
             }
-            sprintf(str,"Numero de palavras do ditado %d: %d\n",val,P);
+            sprintf(str,"Numero de palavras do ditado %d: %d",val, NumPalavras);
             send(sd,str,strlen(str),0);
 }
             else
             if(!strncmp(str,"PALT",4)){
-            int P=0;
+            NumPalavras=0;
             for(val=0;val<ditados-1;val++){
             strcpy(aux,msg[val]);
             for(i=0;aux[i]!='(';i++){
             if(aux[i] ==' ')
-                P++;
+                NumPalavras++;
             }
             }
 
-            sprintf(str,"Numero de palavras TOTAL: %d\n",P);
+            sprintf(str,"Numero de palavras TOTAL: %d", NumPalavras);
             send(sd,str,strlen(str),0);
             }
 
             else
             if(!strncmp(str,"GRAV",4)){
             FILE *f;
-            if((f=fopen("ArquivoFrases.txt","w+"))==NULL){
+            if((f=fopen("ArquivoFrases.txt","w"))==NULL){
                 printf("\nNão foi possível gravar\n");
                 exit(0);
             }
-            f=fopen("ArquivoFrases.txt","w+");
+            else{
             for(val=0;val<ditados;val++){
                 fputs(msg[val],f);
-            }
+            }}
             fclose(f);
             printf("\nArquivo gravado com sucesso.\n");
-                sprintf(str,"\n Arquivo de frases 'ArquivoFrases.txt' gravado com sucesso\n");
+                sprintf(str,"\n Arquivo de frases 'ArquivoFrases.txt' gravado com sucesso.");
                 send(sd,str,strlen(str),0);
             }
             else
