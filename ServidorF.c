@@ -22,7 +22,7 @@ telnet 192.168.1.21 9551
 
 
 #define PROTOPORT       5193            /* default protocol port number */
-#define QLEN            10               /* size of request queue        */
+#define QLEN            10              /* size of request queue        */
 
 int     visits      =   0;              /* counts client connections    */
 char    msg [1000][1000];
@@ -44,11 +44,11 @@ void LeDitado()
 }
 
 char uppercase(char *input) {
-    char i=0;
-    for(i = 0; (i<strlen(input)) && (i<1000); i++) {
-        input[i] = toupper(input[i]);
+    char in=0;
+    for(in = 0; (in<strlen(input)) && (in<1000); in++) {
+        input[in] = toupper(input[in]);
     }
-    return i;
+    return in;
 }
 
 void *atendeConexao( int *sd2 )
@@ -77,7 +77,7 @@ void *atendeConexao( int *sd2 )
 		printf("\nComando recebido:%s",str);
 		
 		uppercase(str);
-
+		if((str[0]=='\r')||(str[0]=='\n')) continue;
 
 		if (!strncmp(str,"GETR",4)) {
 		     sprintf(str,"\nFrase: %s ", msg[random()%ditados]);
@@ -85,14 +85,17 @@ void *atendeConexao( int *sd2 )
 		}
                 else
                 if (!strncmp(str,"GETN",4)) {
+               
                      b=recv(sd,str,10,0);
                      str[b]=0;
                      val = strtol(str, &endptr, 10);
-                     //if (endptr==str)  {sprintf(str,"\nFALHA");continue;}
-                     //else{
+                     
+                     if (endptr==str)  {sprintf(str,"\nFALHA");continue;}
+                     else{
+                     printf("\nGETN %d recebido",val);
                      sprintf(str,"\nGETN %d: %s",val, msg[val]);
                      send(sd,str,strlen(str),0);
-                     //}
+                     }
 		}
                 else
 		if (!strncmp(str,"REPL",4)) {
@@ -301,7 +304,7 @@ int main(int argc, char *argv[])
 
 	/* Main server loop - accept and handle requests */
 
-	/*while (1) {
+	while (1) {
 		alen = sizeof(cad);
 		if ( (sd2=accept(sd, (struct sockaddr *)&cad, &alen)) < 0) {
 			fprintf(stderr, "accept failed\n");
@@ -310,7 +313,7 @@ int main(int argc, char *argv[])
 		printf ("\nServidor atendendo conexÃ£o %d", visits);
                 pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
 
-	}*/
+	}
 	gettimeofday(&start, NULL);
         fd_set current_sockets, ready_sockets;
         int retval;
@@ -320,7 +323,7 @@ int main(int argc, char *argv[])
         tv.tv_sec = 1;
         tv.tv_usec = 0;
 	
-	while (1) {
+	/*while (1) {
 	ready_sockets = current_sockets;
 	if(select(FD_SETSIZE, &ready_sockets, NULL, NULL, NULL) <0){
 	perror("select error");
@@ -336,12 +339,14 @@ int main(int argc, char *argv[])
 		}
 		FD_SET(sd2, &current_sockets);
 		printf ("\nServidor atendendo conexÃ£o %d", visits);
+		}
+		else {
                 pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
                 FD_CLR(j, &current_sockets);
                 
 	}		
 	}
 	}
-	}
+	}*/
 	
 }
