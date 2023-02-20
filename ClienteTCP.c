@@ -127,7 +127,7 @@ char    *argv[];
         FD_ZERO(&reading);
         FD_SET(sd, &reading);
 
-        tv.tv_sec = 5;
+        tv.tv_sec = 1;
         tv.tv_usec = 0;
 
         /* Repeatedly read data from socket and write to user's screen. */
@@ -145,53 +145,94 @@ char    *argv[];
 
         /* Laço for() feito para enviar múltiplas requisições. max_i = 1500 pois não tem garantia que todos os recv serão enviados*/
 
-       for(i=0;i<20;i++){  
+	sem_t NUM;
+	sem_t FRASE;
+	sem_init(&NUM, 0, 1);
+		
+       for(i=0;i<200;i++){  
 	
-            send(sd, "GETR\n",10, 0);
-
-
-            send(sd, "GETN\n",10, 0);
-
-
+            send(sd, "GETR\n",6, 0);
+            
+            sem_wait(&NUM);
+            send(sd, "GETN\n",6, 0);
+            
             send(sd, "10\n",4, 0);
-
-            send(sd, "REPL\n",10, 0);
-
+            memset(buf,0,1024);
+            b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
+        sem_post(&NUM);
+            
+            sem_wait(&NUM);
+            send(sd, "REPL\n",6, 0);
+            
             send(sd, "17\n",4, 0);
 
             send(sd, "SUBSTITUIDO\n",15, 0);
+            memset(buf,0,1024);
+            b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
+        sem_post(&NUM);
 
+            send(sd, "PALT\n",6, 0);
 
-            send(sd, "PALT\n",10, 0);
-
+sem_wait(&NUM);
             send(sd, "DELE\n",6, 0);
-
-                send(sd, "15\n",4, 0);
-
+            
+            send(sd, "15\n",4, 0);
+           memset(buf,0,1024);
+            b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
+        sem_post(&NUM);
             send(sd, "ADDF\n",6, 0);
+            sem_wait(&NUM);
 
-                send(sd, "NovaFrase\n",11, 0);
-
+            send(sd, "NovaFrase\n",11, 0);
+memset(buf,0,1024);
+            b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
+        sem_post(&NUM);
+        
             send(sd, "SEAR\n",6, 0);
-
+        sem_wait(&NUM);    
                 send(sd, "Pessoa\n",8, 0);
-
+          memset(buf,0,1024);
+            b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
+        sem_post(&NUM);
+            
             send(sd, "PALD\n",6, 0);
+          
+               send(sd, "20\n",4, 0);
+           memset(buf,0,1024);
+            b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
+        sem_post(&NUM);
+            send(sd, "VERS\n",6, 0);
 
-               send(sd, "20",2, 0);
-
-            send(sd, "VERS\n",10, 0);
-
-            send(sd, "GRAV\n",10, 0);
+            send(sd, "GRAV\n",6, 0);
 
 
-            send(sd, "CARR\n",6, 0);
+            //send(sd, "CARR\n",6, 0);
+            
             memset(buf,0,1024);
             b=recv(sd, buf, 1024, 0);
             buf[b]=0;
             printf("%s",buf);
         
         }
+        send(sd, "CARR\n",6, 0);
+            
+            memset(buf,0,1024);
+            b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
+        //send(sd, "QUIT\n",6, 0);
         /*Comando select() utilizado para estabelecer um timeout e garantir que o cliente não vai ficara parado aguardando todos os dados dos recv quando não forem enviados */
 
         n = select(sd +1, &reading, NULL, NULL, &tv);
