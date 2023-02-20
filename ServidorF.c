@@ -57,7 +57,7 @@ void *atendeConexao( int *sd2 )
 	int sig=0;
 	char str[2000], aux[2000], *endptr;
 
-	int i=0, b, val, n;
+	int i=0, b=0, val, n;
 
         while (1) {
 		visits++;
@@ -68,7 +68,7 @@ void *atendeConexao( int *sd2 )
 		}
                 
 		memset(str,0,999);
-                b=recv(sd,str,10,0);
+                b=recv(sd,str,999,0);
                 for(n=0;n<b;n++){
                 if((str[b-n] == '\n') || (str[b-n] == '\r')){
                 str[b-n] = 0;
@@ -85,7 +85,7 @@ void *atendeConexao( int *sd2 )
 		}
                 else
                 if (!strncmp(str,"GETN",4)) {
-                     b=recv(sd,str,1,0);
+                     b=recv(sd,str,10,0);
                      str[b]=0;
                      val = strtol(str, &endptr, 10);
                      //if (endptr==str)  {sprintf(str,"\nFALHA");continue;}
@@ -96,13 +96,13 @@ void *atendeConexao( int *sd2 )
 		}
                 else
 		if (!strncmp(str,"REPL",4)) {
-		     b=recv(sd,str,2,0);
+		     b=recv(sd,str,10,0);
                      str[b]=0;
                      val = strtol(str, &endptr, 10);
                      //if (endptr==str)  {sprintf(str,"\nFALHA");continue;}
                      //else sprintf(str,"\nOK");
 		     send(sd,str,strlen(str),0);
-		     b=recv(sd,str,13,0);
+		     b=recv(sd,str,20,0);
                      str[b]=0;
                      strcpy(msg[val],str);
                      sprintf(str,"\nOK");
@@ -138,7 +138,7 @@ void *atendeConexao( int *sd2 )
 }
             else
             if (!strncmp(str,"DELE",4)) {
-            b = recv(sd, str, 2, 0);
+            b = recv(sd, str, 10, 0);
             str[b] = 0;
             val = strtol(str, &endptr, 10);
             //if (endptr == str) {
@@ -154,7 +154,7 @@ void *atendeConexao( int *sd2 )
            else
            if(!strncmp(str,"SEAR",4)){
             memset(str,0,1024);
-            b=recv(sd,str,4,0);
+            b=recv(sd,str,10,0);
             for(int n=0;n<b;n++){
             if((str[b-n]=='\n')||(str[b-n]=='\r')){
                 str[b-n]=0;
@@ -169,7 +169,7 @@ void *atendeConexao( int *sd2 )
            else
            if(!strncmp(str,"PALD",4)){
             memset(str,0,1024);
-            b=recv(sd,str,1,0); //str -> teclado
+            b=recv(sd,str,10,0); //str -> teclado
             str[b]=0;
             val = strtol(str, &endptr, 10); //coleta o # da frase
             sprintf(str,"Ditado ecolhido %d: %s",val,msg[val]);
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 	int     port;            /* protocol port number                */
 	int     alen;            /* length of address                   */
         pthread_t t;
-
+	struct timeval start, tv;
         srandom(time(NULL));
 	memset((char *)&sad,0,sizeof(sad)); /* clear sockaddr structure */
 	sad.sin_family = AF_INET;         /* set family to Internet     */
@@ -326,18 +326,18 @@ int main(int argc, char *argv[])
 	perror("select error");
 	exit(EXIT_FAILURE);
 	}
-	for (int j=0; j< FD_SETSIZE; i++) {
-		if (FD_ISSET(i, &ready_sockets)){
+	for (int j=0; j< FD_SETSIZE; j++) {
+		if (FD_ISSET(j, &ready_sockets)){
 			if(j==sd){
 			alen = sizeof(cad);
 		if ( (sd2=accept(sd, (struct sockaddr *)&cad, &alen)) < 0) {
 			fprintf(stderr, "accept failed\n");
 			exit(1);
 		}
-		FD_SET(client_socket, &current_sockets);
+		FD_SET(sd2, &current_sockets);
 		printf ("\nServidor atendendo conexÃ£o %d", visits);
                 pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
-                FD_CLR(i, &current_sockets);
+                FD_CLR(j, &current_sockets);
                 
 	}		
 	}
