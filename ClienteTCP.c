@@ -149,7 +149,7 @@ char    *argv[];
 	sem_t FRASE;
 	sem_init(&NUM, 0, 1);
 		
-       for(i=0;i<200;i++){  
+       for(i=0;i<20;i++){  
 	
             send(sd, "GETR\n",6, 0);
             
