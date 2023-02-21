@@ -22,7 +22,7 @@ telnet 192.168.1.21 9551
 
 
 #define PROTOPORT       5193            /* default protocol port number */
-#define QLEN            10              /* size of request queue        */
+#define QLEN            6              /* size of request queue        */
 
 int     visits      =   0;              /* counts client connections    */
 char    msg [1000][1000];
@@ -86,7 +86,7 @@ void *atendeConexao( int *sd2 )
                 else
                 if (!strncmp(str,"GETN",4)) {
                
-                     b=recv(sd,str,10,0);
+                     b=recv(sd,str,20,0);
                      str[b]=0;
                      val = strtol(str, &endptr, 10);
                      
