@@ -246,6 +246,7 @@ int main(int argc, char *argv[])
 	struct  sockaddr_in sad; /* structure to hold server's address  */
 	struct  sockaddr_in cad; /* structure to hold client's address  */
 	int     sd, sd2, max_sd; /* socket descriptors                  */
+	int 	flags;
 	int     port;            /* protocol port number                */
 	int     alen;            /* length of address                   */
         pthread_t t;
@@ -287,10 +288,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "socket creation failed\n");
 		exit(1);
 	}
-	//set socket to non  lbocking mode
-	flags = fcntl(sd, F_GETFL, 0);
-	fcntl(sd, F_SETFL, flags | O_NONBLOCK);
-
+	
 	/* Bind a local address to the socket */
 
 	if (bind(sd, (struct sockaddr *)&sad, sizeof(sad)) < 0) {
@@ -315,6 +313,10 @@ int main(int argc, char *argv[])
 		}
 		printf ("\nServidor atendendo conexÃ£o %d", visits);
                 pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );*/
+              //set socket to non  lbocking mode
+	flags = fcntl(sd, F_GETFL, 0);
+	fcntl(sd, F_SETFL, flags | O_NONBLOCK);
+
         gettimeofday(&start, NULL);
         fd_set current_sockets, ready_sockets;
         int retval;
@@ -331,83 +333,44 @@ int main(int argc, char *argv[])
             fprintf(stderr,"select error");
             exit(1);
             }
-        if (FD_ISSET(sd, &ready_sockets)) {
+       /* if (FD_ISSET(sd, &ready_sockets)) {
             // accept the new connection
             if ( (sd2=accept(sd, NULL, NULL)) < 0) {
 			fprintf(stderr, "accept failed\n");
-
-		}
-            FD_SET(sd2, &current_sockets);
+		}          
+        }*/
+         FD_SET(sd2, &current_sockets);
             if(sd2>max_sd){
             max_sd = sd2;
-        }
         }
         for (int j=0; j<= max_sd; j++) {
 		if (FD_ISSET(j, &ready_sockets)){
 			if(j==sd){
-			continue;}
-		memset(buf,0,1024);
-            b=recv(sd, buf, 1024, 0);
-            buf[b]=0;
-            printf("%s",buf);
-            if (b<=0){
-            /* Sem conexão ou erro */
-            printf("Socket %d desconectada",j);
-            close(j);
-            FD_CLR(j, &current_sockets);
-            } else{
+			//Nova conexão
+			
+			alen = sizeof(cad);
+		if ( (sd2=accept(sd, (struct sockaddr *)&cad, &alen)) < 0) {
+			fprintf(stderr, "accept failed\n");
+			exit(1);
+		} else{
+		flags = fcntl(sd2, F_GETFL, 0);
+	fcntl(sd2, F_SETFL, flags | O_NONBLOCK);
             /* Informação recebida */
             printf ("\nServidor atendendo conexÃ£o %d", visits);
                 pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
 
             }
+			}
+            /*char buf[1024];
+            int n = recv(j, buf, sizeof(buf), 0);
+            if (n<=0){
+            // Sem conexão ou erro 
+            printf("Socket %d desconectada",j);
+            close(j);
+            FD_CLR(j, &current_sockets);
+            } */
         }
         }
         }
 
 }
-/*while (1) {
-        //Bloqueia até ter uma ou mais sockets ativas
-        ready_sockets = current_sockets;
-        if(select(max_sd+1, &ready_sockets, NULL, NULL, NULL) <0){
-	printf("select error");
-	exit(1);
-	}
-		for (int j=0; j<= max_sd; j++) {
-		if (FD_ISSET(j, &ready_sockets)){
-			if(j==sd){
-			alen = sizeof(cad);
-		if ( (sd2=accept(sd, (struct sockaddr *)&cad, &alen)) < 0) {
-			fprintf(stderr, "accept failed\n");
-			exit(1);
-		}
-
-		printf ("\nServidor atendendo conexÃ£o %d", visits);
-		pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
-
-		//Seta non blocking socket
-		flags = fcntl(sd2, F_GETFL, 0);
-		fcntl(sd2, F_SETFL, flags | O_NONBLOCK);
-		FD_SET(sd2, &current_sockets);
-		if(sd2>max_sd){
-		max_sd = sd2;
-		}
-		}else {
-		// Informação chegando em socket já conectada
-		char buf[1024];
-		int n = recv(i, buf, sizeof(buf), 0);
-		if(n<=0){
-		// Sem conexão ou erro
-		close(j);
-		FD_CLR(j, &current_sockets);
-                }else{
-                // Informação recebida
-                buf[n] = '\0';
-                printf("Recebidos %d bytes: %s\n", n, buf);
-        }
-	}
-	}
-	}
-
-	}*/
-
