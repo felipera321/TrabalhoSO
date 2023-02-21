@@ -66,7 +66,7 @@ void *atendeConexao( int *sd2 )
 		if (sig==-1){
 		break;
 		}
-                
+
 		memset(str,0,999);
                 b=recv(sd,str,999,0);
                 for(n=0;n<b;n++){
@@ -75,7 +75,7 @@ void *atendeConexao( int *sd2 )
                 }
                 }
 		printf("\nComando recebido:%s",str);
-		
+
 		uppercase(str);
 		if((str[0]=='\r')||(str[0]=='\n')) continue;
 
@@ -85,11 +85,11 @@ void *atendeConexao( int *sd2 )
 		}
                 else
                 if (!strncmp(str,"GETN",4)) {
-               
+
                      b=recv(sd,str,20,0);
                      str[b]=0;
                      val = strtol(str, &endptr, 10);
-                     
+
                      if (endptr==str)  {sprintf(str,"\nFALHA");continue;}
                      else{
                      printf("\nGETN %d recebido",val);
@@ -287,6 +287,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "socket creation failed\n");
 		exit(1);
 	}
+	//set socket to non  lbocking mode
 	flags = fcntl(sd, F_GETFL, 0);
 	fcntl(sd, F_SETFL, flags | O_NONBLOCK);
 
@@ -322,12 +323,54 @@ int main(int argc, char *argv[])
         max_sd = sd;
         tv.tv_sec = 1;
         tv.tv_usec = 0;
-        
-        while (1) {
-        /*Bloqueia até ter uma ou mais sockets ativas*/
+    while(1){
+
+             /*Bloqueia até ter uma ou mais sockets ativas*/
         ready_sockets = current_sockets;
         if(select(max_sd+1, &ready_sockets, NULL, NULL, NULL) <0){
-	perror("select error");
+            fprintf(stderr,"select error");
+            exit(1);
+            }
+        if (FD_ISSET(sd, &ready_sockets)) {
+            // accept the new connection
+            if ( (sd2=accept(sd, NULL, NULL)) < 0) {
+			fprintf(stderr, "accept failed\n");
+
+		}
+            FD_SET(sd2, &current_sockets);
+            if(sd2>max_sd){
+            max_sd = sd2;
+        }
+        }
+        for (int j=0; j<= max_sd; j++) {
+		if (FD_ISSET(j, &ready_sockets)){
+			if(j==sd){
+			continue;}
+		memset(buf,0,1024);
+            b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
+            if (b<=0){
+            /* Sem conexão ou erro */
+            printf("Socket %d desconectada",j);
+            close(j);
+            FD_CLR(j, &current_sockets);
+            } else{
+            /* Informação recebida */
+            printf ("\nServidor atendendo conexÃ£o %d", visits);
+                pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
+
+            }
+        }
+        }
+        }
+
+}
+/*while (1) {
+        //Bloqueia até ter uma ou mais sockets ativas
+        ready_sockets = current_sockets;
+        if(select(max_sd+1, &ready_sockets, NULL, NULL, NULL) <0){
+	printf("select error");
 	exit(1);
 	}
 		for (int j=0; j<= max_sd; j++) {
@@ -341,60 +384,30 @@ int main(int argc, char *argv[])
 
 		printf ("\nServidor atendendo conexÃ£o %d", visits);
 		pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
-		
-		/*Seta non blocking socket*/
+
+		//Seta non blocking socket
 		flags = fcntl(sd2, F_GETFL, 0);
 		fcntl(sd2, F_SETFL, flags | O_NONBLOCK);
 		FD_SET(sd2, &current_sockets);
 		if(sd2>max_sd){
 		max_sd = sd2;
-		}			
+		}
 		}else {
-		/* Informação chegando em socket já conectada */
+		// Informação chegando em socket já conectada
 		char buf[1024];
 		int n = recv(i, buf, sizeof(buf), 0);
 		if(n<=0){
-		/* Sem conexão ou erro */
+		// Sem conexão ou erro
 		close(j);
 		FD_CLR(j, &current_sockets);
                 }else{
-                /* Informação recebida */
+                // Informação recebida
                 buf[n] = '\0';
                 printf("Recebidos %d bytes: %s\n", n, buf);
-        }      
-	}		
+        }
+	}
 	}
 	}
 
-	}
-	
-
-        
-	
-	/*while (1) {
-	ready_sockets = current_sockets;
-	if(select(FD_SETSIZE, &ready_sockets, NULL, NULL, NULL) <0){
-	perror("select error");
-	exit(EXIT_FAILURE);
-	}
-	for (int j=0; j<= FD_SETSIZE; j++) {
-		if (FD_ISSET(j, &ready_sockets)){
-			if(j==sd){
-			alen = sizeof(cad);
-		if ( (sd2=accept(sd, (struct sockaddr *)&cad, &alen)) < 0) {
-			fprintf(stderr, "accept failed\n");
-			exit(1);
-		}
-		FD_SET(sd2, &current_sockets);
-		printf ("\nServidor atendendo conexÃ£o %d", visits);
-		}
-		else {
-                pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
-                FD_CLR(j, &current_sockets);
-                
-	}		
-	}
-	}
 	}*/
-	
-}
+
