@@ -332,10 +332,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "accept failed\n");
 		}          
         }*/
-         FD_SET(sd2, &current_sockets);
-            if(sd2>max_sd){
-            max_sd = sd2;
-        }
+         
         for (int j=0; j<= max_sd; j++) {
 		if (FD_ISSET(j, &ready_sockets)){
 			if(j==sd){
@@ -351,18 +348,22 @@ int main(int argc, char *argv[])
             printf ("\nServidor atendendo conexÃ£o %d", visits);
                 pthread_create(&t, NULL,  atendeConexao(&sd2), (int *) &sd2 );
             printf("Socket %d desconectada",j);
-            close(j);
-            FD_CLR(j, &current_sockets);
+            FD_SET(sd2, &current_sockets);
+            if(sd2>max_sd){
+            max_sd = sd2;
+        }
+            
             }
-			}
-            /*char buf[1024];
+			}else{
+			char buf[1024];
             int n = recv(j, buf, sizeof(buf), 0);
             if (n<=0){
             // Sem conexão ou erro 
             printf("Socket %d desconectada",j);
             close(j);
             FD_CLR(j, &current_sockets);
-            } */
+			}
+            
         }
         }
         }
