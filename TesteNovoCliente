@@ -128,7 +128,7 @@ gettimeofday(&start, NULL);
         }
 /* Definindo estrutura para utilizar comando select()           */
 
-        
+
         tv.tv_sec = 1;
         tv.tv_usec = 0;
 
@@ -140,8 +140,8 @@ gettimeofday(&start, NULL);
         sem_t FRASE;
         //sem_init(&NUM, 0, 1);
 
-        while(1)
-        
+        while(1){
+
              /*Bloqueia até ter uma ou mais sockets ativas*/
         ready_sockets = current_sockets;
         if(select(max_sd+1, &ready_sockets, NULL, NULL, NULL) <0){
@@ -153,7 +153,7 @@ gettimeofday(&start, NULL);
             //new_sd = accept(sd, NULL, NULL);
             if ( (new_sd=accept(sd, NULL, NULL)) < 0) {
 			fprintf(stderr, "accept failed\n");
-			
+
 		}
             FD_SET(new_sd, &current_sockets);
             if(new_sd>max_sd){
@@ -251,11 +251,11 @@ memset(buf,0,1024);
             printf("%s",buf);
 
         }
-            
+
             }
         }
-        
-          }      
+
+          }
         }
         }
         /* Laço for() feito para enviar múltiplas requisições. max_i = 1500 pois não tem garantia que todos os recv serão enviados*/
@@ -277,5 +277,4 @@ memset(buf,0,1024);
         /* Terminate the client program gracefully. */
 
         exit(0);
-}
 }
