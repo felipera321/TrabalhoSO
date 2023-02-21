@@ -140,32 +140,41 @@ gettimeofday(&start, NULL);
         sem_t FRASE;
         //sem_init(&NUM, 0, 1);
 
-        while(1){
+        while(1)
+        
              /*Bloqueia até ter uma ou mais sockets ativas*/
         ready_sockets = current_sockets;
         if(select(max_sd+1, &ready_sockets, NULL, NULL, NULL) <0){
-            fprintf("select error");
+            fprintf(stderr,"select error");
             exit(1);
             }
         if (FD_ISSET(sd, &ready_sockets)) {
             // accept the new connection
             //new_sd = accept(sd, NULL, NULL);
-            if ( (new_sd=accept(sd, (struct sockaddr *)&cad, &alen)) < 0) {
+            if ( (new_sd=accept(sd, NULL, NULL)) < 0) {
 			fprintf(stderr, "accept failed\n");
-			continue;
+			
 		}
             FD_SET(new_sd, &current_sockets);
             if(new_sd>max_sd){
             max_sd = new_sd;
         }
-                b = recv(j, buf, sizeof(buf), 0);
-                if(n<=0){
-		/* Sem conexão ou erro */
-                close(j);
-                FD_CLR(j, &current_sockets);
-                }else{
-                /* Informação recebida */
-                for(i=0;i<20;i++){
+        for (int j=0; j<= max_sd; j++) {
+		if (FD_ISSET(j, &ready_sockets)){
+			if(j==sd){
+			continue;}
+		memset(buf,0,1024);
+            b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
+            if (b<=0){
+            /* Sem conexão ou erro */
+            printf("Socket %d desconectada",j);
+            close(j);
+            FD_CLR(j, &current_sockets);
+            } else{
+            /* Informação recebida */
+            for(i=0;i<20;i++){
             sem_init(&NUM, 0, 1);
             send(sd, "GETR\n",6, 0);
 
@@ -242,6 +251,11 @@ memset(buf,0,1024);
             printf("%s",buf);
 
         }
+            
+            }
+        }
+        
+          }      
         }
         }
         /* Laço for() feito para enviar múltiplas requisições. max_i = 1500 pois não tem garantia que todos os recv serão enviados*/
@@ -263,4 +277,5 @@ memset(buf,0,1024);
         /* Terminate the client program gracefully. */
 
         exit(0);
+}
 }
