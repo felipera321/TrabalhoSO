@@ -65,6 +65,7 @@ char    *argv[];
 #endif
         memset((char *)&sad,0,sizeof(sad)); /* clear sockaddr structure */
         sad.sin_family = AF_INET;         /* set family to Internet     */
+        
 
         /* Check command-line argument for protocol port and extract    */
         /* port number if one is specified.  Otherwise, use the default */
@@ -113,19 +114,21 @@ char    *argv[];
                 fprintf(stderr, "socket creation failed\n");
                 exit(1);
         }
-gettimeofday(&start, NULL);
+
+        /* Connect the socket to the specified server. */
+	flags = fcntl(sd, F_GETFL, 0);
+	fcntl(sd, F_SETFL, flags | O_NONBLOCK);
+        if (connect(sd, (struct sockaddr *)&sad, sizeof(sad)) < 0) {
+                fprintf(stderr,"connect failed\n");
+                exit(1);
+        }
+        gettimeofday(&start, NULL);
         fd_set current_sockets, ready_sockets;
         int retval;
         FD_ZERO(&current_sockets);
         FD_SET(sd, &current_sockets);
         max_sd = sd;
 
-        /* Connect the socket to the specified server. */
-
-        if (connect(sd, (struct sockaddr *)&sad, sizeof(sad)) < 0) {
-                fprintf(stderr,"connect failed\n");
-                exit(1);
-        }
 /* Definindo estrutura para utilizar comando select()           */
 
 
