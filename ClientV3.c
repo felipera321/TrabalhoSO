@@ -40,7 +40,7 @@ char    localhost[] =   "localhost";    /* default host name            */
  *
  *------------------------------------------------------------------------
  */
-main(argc, argv)
+int main(argc, argv)
 int     argc;
 char    *argv[];
 {
@@ -53,7 +53,7 @@ char    *argv[];
         int     n=0, b=0, s;               /* number of characters read           */
         char    buf[1000];       /* buffer for data from the server     */
         gettimeofday(&start, NULL);
-        //prepara para futura implementação de select
+        //prepara para futura implementaÃ§Ã£o de select
 
         fd_set current_sock;
         FD_ZERO(&current_sock);
@@ -105,7 +105,7 @@ char    *argv[];
 
         /* Map TCP transport protocol name to protocol number. */
 
-        if ( ((int)(ptrp = getprotobyname("tcp"))) == 0) {
+        if ( ((int*)(ptrp = getprotobyname("tcp"))) == 0) {
                 fprintf(stderr, "cannot map \"tcp\" to protocol number");
                 exit(1);
         }
@@ -129,7 +129,7 @@ char    *argv[];
 		memset(buf,0, 1000);
         n = recv(sd, buf, sizeof(buf), 0);
         buf[n]=0;
-        //Laço for envia 1500 operações aleatórias
+        //LaÃ§o for envia 1500 operaÃ§Ãµes aleatÃ³rias
         for (int i = 0; i<150; i++){
            send(sd, "GETR\n",6, 0);
     send(sd, "GETN\n",6, 0);
@@ -159,15 +159,15 @@ char    *argv[];
 
             char buf[1024];
             memset(buf,0,1024);
-            int b=recv(sd, buf, 1024, 0);
-            buf[b]=0;
+            n=recv(sd, buf, 1024, 0);
+            buf[n]=0;
             printf("%s",buf);
         }
             s = select(sd + 1, &current_sock, NULL, NULL, &tv);
             while(select(sd + 1, &current_sock, NULL, NULL, &tv)!=0){
             //printf("ESSE N %d",n); // pra debug do select
             memset(buf,0, 1024);
-            n = recv(sd, buf, 1024, 0);
+            b = recv(sd, buf, 1024, 0);
             buf[n]=0;
            printf("%s",buf);
 	}
