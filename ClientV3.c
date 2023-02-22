@@ -21,51 +21,6 @@
 struct timeval start, end, tv;
 #define PROTOPORT       5193            /* default protocol port number */
 
-void ExecutaOperacao(int x){        //fun√ß√£o para executar comandos
-if (x==0){
-    send(sd, "GETR\n",6, 0);
-
-}
-if (x==1){
-    send(sd, "GETN\n",6, 0);
-    send(sd, "10\n",4, 0);
-}
-if (x ==2){
-    send(sd, "REPL\n",6, 0);
-    send(sd, "17\n",4, 0);
-    send(sd, "SUBSTITUIDO\n",15, 0);
-}
-if (x ==3){
-    send(sd, "PALT\n",6, 0);
-}
-if (x ==4){
-    send(sd, "DELE\n",6, 0);
-    send(sd, "15\n",4, 0);
-}
-if (x==5){
-    send(sd, "ADDF\n",6, 0);
-    send(sd, "NovaFrase\n",11, 0);
-}
-if (x==6){
-    send(sd, "SEAR\n",6, 0);
-    send(sd, "Pessoa\n",8, 0);
-}
-if (x==7){
-    send(sd, "PALD\n",6, 0);
-    send(sd, "20\n",4, 0);
-}
-if (x==8){
-    send(sd, "VERS\n",6, 0);
-}
-if (x==9){
-    send(sd, "GRAV\n",6, 0);
-}
-            char buf[1024];
-            memset(buf,0,1024);
-            int b=recv(sd, buf, 1024, 0);
-            buf[b]=0;
-            printf("%s",buf);
-}
 
 extern  int             errno;
 char    localhost[] =   "localhost";    /* default host name            */
@@ -98,7 +53,7 @@ char    *argv[];
         int     n=0, b=0, s;               /* number of characters read           */
         char    buf[1000];       /* buffer for data from the server     */
         gettimeofday(&start, NULL);
-        //prepara para futura implementa√ß√£o de select
+        //prepara para futura implementaÁ„o de select
 
         fd_set current_sock;
         FD_ZERO(&current_sock);
@@ -173,11 +128,40 @@ char    *argv[];
         /* Repeatedly read data from socket and write to user's screen. */
 		memset(buf,0, 1000);
         n = recv(sd, buf, sizeof(buf), 0);
-        buf[n]=0
-        //La√ßo for envia 1500 opera√ß√µes aleat√≥rias
-        for (int i = 0; i<1500; i++){
-            srand(time(NULL));
-            ExecutaOperacao(rand()%10);
+        buf[n]=0;
+        //LaÁo for envia 1500 operaÁıes aleatÛrias
+        for (int i = 0; i<150; i++){
+           send(sd, "GETR\n",6, 0);
+    send(sd, "GETN\n",6, 0);
+    send(sd, "10\n",4, 0);
+
+    send(sd, "REPL\n",6, 0);
+    send(sd, "17\n",4, 0);
+    send(sd, "SUBSTITUIDO\n",15, 0);
+
+    send(sd, "PALT\n",6, 0);
+
+    send(sd, "DELE\n",6, 0);
+    send(sd, "15\n",4, 0);
+
+    send(sd, "ADDF\n",6, 0);
+    send(sd, "NovaFrase\n",11, 0);
+
+    send(sd, "SEAR\n",6, 0);
+    send(sd, "Pessoa\n",8, 0);
+
+    send(sd, "PALD\n",6, 0);
+    send(sd, "20\n",4, 0);
+
+    send(sd, "VERS\n",6, 0);
+
+    send(sd, "GRAV\n",6, 0);
+
+            char buf[1024];
+            memset(buf,0,1024);
+            int b=recv(sd, buf, 1024, 0);
+            buf[b]=0;
+            printf("%s",buf);
         }
             s = select(sd + 1, &current_sock, NULL, NULL, &tv);
             while(select(sd + 1, &current_sock, NULL, NULL, &tv)!=0){
