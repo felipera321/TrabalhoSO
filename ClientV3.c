@@ -1,5 +1,3 @@
-/* client.c - code for example client program that uses TCP */
-
 #ifndef unix
 #define WIN32
 #include <windows.h>
@@ -50,7 +48,7 @@ char    *argv[];
         int     sd;              /* socket descriptor                   */
         int     port;            /* protocol port number                */
         char    *host;           /* pointer to host name                */
-        int     n=0, b=0, s;               /* number of characters read           */
+        int     n=0, b=0, s=0;               /* number of characters read           */
         char    buf[1000];       /* buffer for data from the server     */
         gettimeofday(&start, NULL);
         //prepara para futura implementação de select
@@ -59,9 +57,9 @@ char    *argv[];
         FD_ZERO(&current_sock);
         FD_SET(sd, &current_sock);
 
-   	// temporizador para o select
+    // temporizador para o select
     tv.tv_sec = 5;
-   	tv.tv_usec = 0;
+    tv.tv_usec = 0;
 
 #ifdef WIN32
         WSADATA wsaData;
@@ -126,53 +124,54 @@ char    *argv[];
         }
 
         /* Repeatedly read data from socket and write to user's screen. */
-		memset(buf,0, 1000);
+        memset(buf,0, 5);
         n = recv(sd, buf, sizeof(buf), 0);
         buf[n]=0;
-        //Laço for envia 1500 operações aleatórias
-        for (int i = 0; i<150; i++){
-           send(sd, "GETR\n",6, 0);
-    send(sd, "GETN\n",6, 0);
-    send(sd, "10\n",4, 0);
+        for(int i=0;i<150;i++) {   
+        
+        send(sd,"GETR\n",10,0);
 
-    send(sd, "REPL\n",6, 0);
-    send(sd, "17\n",4, 0);
-    send(sd, "SUBSTITUIDO\n",15, 0);
+        send(sd, "GETN\n",10, 0);
+        send(sd, "10\n",2, 0);
 
-    send(sd, "PALT\n",6, 0);
+        //send(sd, "REPL\n",10, 0);
+       // send(sd, "17\n",2, 0);
+        //send(sd, "SUBSTITUIDO\n",15, 0);
 
-    send(sd, "DELE\n",6, 0);
-    send(sd, "15\n",4, 0);
+        send(sd, "PALT\n",10, 0);
 
-    send(sd, "ADDF\n",6, 0);
-    send(sd, "NovaFrase\n",11, 0);
+        send(sd, "DELE\n",10, 0);
+        send(sd, "15\n",2, 0);
 
-    send(sd, "SEAR\n",6, 0);
-    send(sd, "Pessoa\n",8, 0);
+        send(sd, "ADDF\n",10, 0);
+        send(sd, "NovaFrase\n",10, 0);
 
-    send(sd, "PALD\n",6, 0);
-    send(sd, "20\n",4, 0);
+        send(sd, "SEAR\n",10, 0);
+        send(sd, "Pessoa\n",10, 0);
 
-    send(sd, "VERS\n",6, 0);
+        send(sd, "PALD\n",10, 0);
+        send(sd, "20\n",2, 0);
 
-    send(sd, "GRAV\n",6, 0);
+        send(sd, "VERS\n",10, 0);
 
-            char buf[1024];
-            memset(buf,0,1024);
-            n=recv(sd, buf, 1024, 0);
+        send(sd, "GRAV\n",10, 0);
+     
+      memset(buf,0, 1024);
+            n = recv(sd, buf, 1024, 0);
             buf[n]=0;
-            printf("%s",buf);
-        }
-            s = select(sd + 1, &current_sock, NULL, NULL, &tv);
-            while(select(sd + 1, &current_sock, NULL, NULL, &tv)!=0){
-            //printf("ESSE N %d",n); // pra debug do select
-            memset(buf,0, 1024);
-            b = recv(sd, buf, 1024, 0);
-            buf[b]=0;
            printf("%s",buf);
-	}
+        
+         
+          }   
 
-
+        s = select(sd + 1, &current_sock, NULL, NULL, &tv);
+        while(select(sd + 1, &current_sock, NULL, NULL, &tv)!=0){
+        
+        memset(buf,0, 1024);
+        n = recv(sd, buf, 1024, 0);
+        buf[n]=0;
+        printf("%s",buf);
+        }       
         /* Close the socket. */
 
         closesocket(sd);
