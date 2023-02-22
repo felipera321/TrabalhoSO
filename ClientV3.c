@@ -168,7 +168,7 @@ char    *argv[];
             //printf("ESSE N %d",n); // pra debug do select
             memset(buf,0, 1024);
             b = recv(sd, buf, 1024, 0);
-            buf[n]=0;
+            buf[b]=0;
            printf("%s",buf);
 	}
 
